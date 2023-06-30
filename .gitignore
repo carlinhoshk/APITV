@@ -17,6 +17,9 @@ target/
 .springBeans
 .sts4-cache
 
+
+application.properties
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
@@ -42,8 +45,6 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-# configs 
-./application.properties
 
 ### STS ###
 .apt_generated
