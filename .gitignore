@@ -6,7 +6,7 @@ target/
 !**/src/test/**/target/
 
 # configs 
-.application.properties
+**/application.properties
 
 ### STS ###
 .apt_generated
@@ -17,8 +17,6 @@ target/
 .springBeans
 .sts4-cache
 
-
-application.properties
 
 ### IntelliJ IDEA ###
 .idea
