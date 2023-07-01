@@ -62,4 +62,7 @@ public class UserModel implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    public void setId(String userId) {
+    }
 }

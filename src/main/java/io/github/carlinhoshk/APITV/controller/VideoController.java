@@ -4,6 +4,10 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import io.github.carlinhoshk.APITV.model.user.UserModel;
+import io.github.carlinhoshk.APITV.model.video.Video;
+import io.github.carlinhoshk.APITV.repository.UserRepository;
+import io.github.carlinhoshk.APITV.repository.VideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -20,10 +24,13 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/videos")
-public class UserController {
+public class VideoController {
 
     @Autowired
     private VideoRepository videoRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Value("${azure.storage.connection-string}")
     private String azureConnectionString;
@@ -33,11 +40,15 @@ public class UserController {
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadVideo(@RequestParam("file") MultipartFile file,
-                                              @RequestParam("name") String name,
                                               @RequestParam("title") String title) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String userId = authentication.getName();
+            String username = authentication.getName();
+
+            UserModel user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não encontrado");
+            }
 
             BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
                     .connectionString(azureConnectionString)
@@ -46,18 +57,16 @@ public class UserController {
             BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient(containerName);
             containerClient.createIfNotExists();
 
-            String blobName = generateBlobName(userId, file.getOriginalFilename());
+            String blobName = generateBlobName(user.getId(), file.getOriginalFilename());
             BlobClient blobClient = containerClient.getBlobClient(blobName);
             blobClient.upload(file.getInputStream(), file.getSize());
 
             String blobUrl = blobClient.getBlobUrl();
 
             Video video = new Video();
-            video.setName(name);
-            video.setTitle(title);
-            video.setUserId(userId);
-            video.setBlobName(blobName);
-            video.setBlobUrl(blobUrl);
+            video.setName(title);
+            video.setUserId(user.getId());
+            video.setUrl(blobUrl);
 
             videoRepository.save(video);
 
@@ -67,7 +76,7 @@ public class UserController {
         }
     }
 
-    private String generateBlobName(String userId, String filename) {
+    private String generateBlobName(String user, String filename) {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String timestamp = now.format(formatter);
@@ -75,6 +84,7 @@ public class UserController {
         UUID uuid = UUID.randomUUID();
         String uniqueId = uuid.toString();
 
-        return userId + "_" + timestamp + "_" + uniqueId + "_" + filename;
+        String blobName = user + "_" + timestamp + "_" + uniqueId + "_" + filename;
+        return blobName;
     }
 }
