@@ -2,7 +2,7 @@ package io.github.carlinhoshk.APITV.controller;
 
 import io.github.carlinhoshk.APITV.model.user.AuthenticationDTO;
 import io.github.carlinhoshk.APITV.model.user.LoginResponseDTO;
-import io.github.carlinhoshk.APITV.model.user.RgisterDTO;
+import io.github.carlinhoshk.APITV.model.user.RegisterDTO;
 import io.github.carlinhoshk.APITV.model.user.UserModel;
 import io.github.carlinhoshk.APITV.repository.UserRepository;
 import io.github.carlinhoshk.APITV.security.TokenService;
@@ -12,10 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("auth")
@@ -33,12 +30,20 @@ public class AuthenticationController {
         var auth = this.authenticationManager.authenticate(usernamePassword);
 
         var token = tokenService.generateToken((UserModel) auth.getPrincipal());
+        var userId = ((UserModel) auth.getPrincipal()).getId();
 
         return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
+    @PostMapping(value = "/username")
+    public String username(@RequestBody @Valid AuthenticationDTO data) {
+        var user = this.repository.findByLogin(data.login());
+        return user.getUsername();
+    }
+
+
     @PostMapping("/register")
-    public ResponseEntity register(@RequestBody @Valid RgisterDTO data) {
+    public ResponseEntity register(@RequestBody @Valid RegisterDTO data) {
         if (this.repository.findByLogin(data.login()) != null)
             return ResponseEntity.badRequest().build();
 

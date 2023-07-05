@@ -10,6 +10,6 @@ import java.util.List;
 
 public interface VideoRepository extends JpaRepository<Video, String> {
 
-    @Query("SELECT v FROM videos v WHERE v.user = :user")
-    List<Video> findByUser(@Param("user") UserModel user);
+    // @Query("SELECT v FROM videos v WHERE v.user = :user")
+    // List<Video> findByUser(@Param("user") UserModel user);
 }
